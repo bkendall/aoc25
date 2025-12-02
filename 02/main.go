@@ -41,14 +41,7 @@ func main() {
 	for _, r := range ranges {
 		start, end := r.start, r.end
 		for i := start; i <= end; i++ {
-			s := fmt.Sprintf("%d", i)
-			if len(s)%2 == 1 {
-				// Odd length cannot have repeated pattern.
-				continue
-			}
-			mid := len(s) / 2
-			first, second := s[0:mid], s[mid:]
-			if first == second {
+			if hasRepeatingHalves(i) {
 				count++
 				sum += i
 			}
@@ -64,30 +57,47 @@ func main() {
 	for _, r := range ranges {
 		start, end := r.start, r.end
 		for i := start; i <= end; i++ {
-			s := fmt.Sprintf("%d", i)
-			maxLen := len(s) / 2
-			for l := 1; l <= maxLen; l++ {
-				if len(s)%l != 0 {
-					// Pattern length must divide string length.
-					continue
-				}
-				pattern := s[0:l]
-				// Check if the pattern repeats in the string.
-				repeated := true
-				for j := l; j < len(s); j += l {
-					if s[j:j+l] != pattern {
-						repeated = false
-						break
-					}
-				}
-				if repeated {
-					count++
-					sum += i
-					break
-				}
+			if hasRepeatingPattern(i) {
+				count++
+				sum += i
 			}
 		}
 	}
 	fmt.Printf("Count: %d\n", count)
 	fmt.Printf("Sum: %d\n", sum)
+}
+
+func hasRepeatingHalves(i int) bool {
+	s := fmt.Sprintf("%d", i)
+	if len(s)%2 == 1 {
+		// Odd length cannot have repeated pattern.
+		return false
+	}
+	mid := len(s) / 2
+	first, second := s[0:mid], s[mid:]
+	return first == second
+}
+
+func hasRepeatingPattern(i int) bool {
+	s := fmt.Sprintf("%d", i)
+	maxLen := len(s) / 2
+	for l := 1; l <= maxLen; l++ {
+		if len(s)%l != 0 {
+			// Pattern length must divide string length.
+			continue
+		}
+		pattern := s[0:l]
+		// Check if the pattern repeats in the string.
+		repeated := true
+		for j := l; j < len(s); j += l {
+			if s[j:j+l] != pattern {
+				repeated = false
+				break
+			}
+		}
+		if repeated {
+			return true
+		}
+	}
+	return false
 }

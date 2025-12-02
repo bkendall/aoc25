@@ -1,4 +1,4 @@
-load("@rules_go//go:def.bzl", "go_binary", "go_library")
+load("@rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
 
 go_library(
     name = "02_lib",
@@ -13,4 +13,11 @@ go_binary(
     embed = [":02_lib"],
     data = glob(["*.txt"]),
     visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "02_test",
+    size = "small",
+    srcs = ["main_test.go"],
+    embed = [":02_lib"],
 )

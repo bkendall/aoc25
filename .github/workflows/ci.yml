@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  run-binaries:
+  run-tests:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -24,6 +24,5 @@ jobs:
         restore-keys: |
           bazel-${{ runner.os }}-
 
-    - name: Run all binaries
-      run: |
-        bazel query 'kind(go_binary, //...)' | xargs -I {} bazel run {}
+    - name: Run all tests
+      run: bazel test //...
