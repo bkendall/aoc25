@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  run-binaries:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Bazel
+      uses: bazelbuild/setup-bazelisk@v3
+
+    - name: Mount bazel cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/bazel
+        key: bazel-${{ runner.os }}-${{ hashFiles('MODULE.bazel') }}
+        restore-keys: |
+          bazel-${{ runner.os }}-
+
+    - name: Run all binaries
+      run: bazel run //...
