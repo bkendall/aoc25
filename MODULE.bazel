@@ -1,3 +1,5 @@
+"Module for Advent of Code 2025"
+
 module(name = "aoc25")
 
 bazel_dep(name = "rules_go", version = "0.59.0")
