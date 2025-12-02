@@ -1,30 +1,12 @@
 package main
 
 import (
+	"aoc25/lib"
 	"flag"
 	"fmt"
-	"math"
 	"os"
-	"strconv"
 	"strings"
 )
-
-func fatalf(format string, args ...any) {
-	fmt.Printf(format, args...)
-	os.Exit(1)
-}
-
-func toInt(s string) int {
-	i, err := strconv.Atoi(s)
-	if err != nil {
-		fatalf("%v", err)
-	}
-	return i
-}
-
-func abs(i int) int {
-	return int(math.Abs(float64(i)))
-}
 
 type Turn struct {
 	direction string
@@ -37,7 +19,7 @@ func main() {
 
 	buff, err := os.ReadFile(*sourcePtr)
 	if err != nil {
-		fatalf("Error: %v", err)
+		lib.Fatalf("Error: %v", err)
 	}
 	input := string(buff)
 	input = strings.TrimSpace(input)
@@ -45,7 +27,7 @@ func main() {
 	turns := []Turn{}
 	for _, l := range strings.Split(input, "\n") {
 		t := string(l[0])
-		s := toInt(l[1:])
+		s := lib.ToInt(l[1:])
 		turns = append(turns, Turn{direction: t, steps: s})
 	}
 

@@ -5,6 +5,7 @@ go_library(
     srcs = ["main.go"],
     importpath = "aoc25/01",
     visibility = ["//visibility:private"],
+    deps = ["//lib"],
 )
 
 go_binary(
