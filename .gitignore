@@ -1,0 +1,8 @@
+# Bazel
+.bazel/
+bazel-*
+!bazel-bin/
+!bazel-genfiles/
+!bazel-testlogs/
+!bazel-out/
+.DS_Store
