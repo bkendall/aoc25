@@ -25,4 +25,5 @@ jobs:
           bazel-${{ runner.os }}-
 
     - name: Run all binaries
-      run: bazel run //...
+      run: |
+        bazel query 'kind(go_binary, //...)' | xargs -I {} bazel run {}
