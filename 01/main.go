@@ -14,7 +14,7 @@ type Turn struct {
 }
 
 func main() {
-	sourcePtr := flag.String("source", "./sample.txt", "input file")
+	sourcePtr := flag.String("source", "01/sample.txt", "input file")
 	flag.Parse()
 
 	buff, err := os.ReadFile(*sourcePtr)
