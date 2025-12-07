@@ -1,23 +1,31 @@
 package main
 
 import (
-	"os"
 	"strings"
 	"testing"
 )
 
-func readSampleInput(t *testing.T) string {
-	t.Helper()
-	buff, err := os.ReadFile("sample.txt")
-	if err != nil {
-		t.Fatalf("Error reading sample.txt: %v", err)
-	}
-	return strings.TrimSpace(string(buff))
-}
+var sampleInput = strings.TrimSpace(`
+.......S.......
+...............
+.......^.......
+...............
+......^.^......
+...............
+.....^.^.^.....
+...............
+....^.^...^....
+...............
+...^.^...^.^...
+...............
+..^...^.....^..
+...............
+.^.^.^.^.^...^.
+...............
+`)
 
 func TestPart1(t *testing.T) {
-	input := readSampleInput(t)
-	w := parseInput(input)
+	w := parseInput(sampleInput)
 	startX := findStart(w)
 	if startX == -1 {
 		t.Fatal("Could not find start")
@@ -29,8 +37,7 @@ func TestPart1(t *testing.T) {
 }
 
 func TestPart2(t *testing.T) {
-	input := readSampleInput(t)
-	w := parseInput(input)
+	w := parseInput(sampleInput)
 	startX := findStart(w)
 	if startX == -1 {
 		t.Fatal("Could not find start")
