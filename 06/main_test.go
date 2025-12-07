@@ -4,6 +4,6 @@ import (
 	"testing"
 )
 
-func TestMain(t *testing.T) {
+func TestMainFn(t *testing.T) {
 	t.Skip()
 }
