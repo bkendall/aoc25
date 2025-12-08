@@ -23,3 +23,15 @@ func ToInt(s string) int {
 func Abs(i int) int {
 	return int(math.Abs(float64(i)))
 }
+
+func Sqrt(i int) int {
+	return int(math.Sqrt(float64(i)))
+}
+
+func Square(i int) int {
+	return i * i
+}
+
+func Distance3D(x1, y1, z1, x2, y2, z2 int) int {
+	return Sqrt(Square(x2-x1) + Square(y2-y1) + Square(z2-z1))
+}
