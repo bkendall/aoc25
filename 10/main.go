@@ -4,6 +4,7 @@ import (
 	"aoc25/lib"
 	"flag"
 	"fmt"
+	"math"
 	"os"
 	"strings"
 )
@@ -14,6 +15,7 @@ type Machine struct {
 	Buttons        int
 	ButtonTriggers map[int][]int
 	TargetState    []bool
+	TargetJoltage  []int
 }
 
 func (m Machine) String() string {
@@ -61,12 +63,12 @@ func main() {
 	input = strings.TrimSpace(input)
 
 	machines := parseInput(input)
-	for _, m := range machines {
-		fmt.Println(m)
-	}
 
 	sum := solvePartOne(machines)
 	fmt.Println("Part 1:", sum)
+
+	sum = solvePartTwo(machines)
+	fmt.Println("Part 2:", sum)
 }
 
 func parseInput(input string) []*Machine {
@@ -88,8 +90,13 @@ func parseInput(input string) []*Machine {
 			}
 		}
 
-		// Drop the last arr element for now, in curly braces.
-		arr = arr[:len(arr)-1]
+		last, arr := arr[len(arr)-1], arr[:len(arr)-1]
+		last = strings.Trim(last, "{}")
+		lastArr := strings.Split(last, ",")
+		m.TargetJoltage = make([]int, len(lastArr))
+		for i, j := range lastArr {
+			m.TargetJoltage[i] = lib.ToInt(j)
+		}
 
 		// Each arr is a button that triggers a set of lights.
 		m.Buttons = len(arr)
@@ -236,6 +243,172 @@ func findMinPresses(m *Machine) int {
 			minPresses = presses
 		}
 	}
+
+	return minPresses
+}
+
+// In this part, we're going to need to find the minimum number of button presses
+// to reach the "TargetJoltage". The index in the TargetJoltage array cooresponds
+// each light that the button affects. Pressing a button increments the "joltage"
+// by one for each light it affects.
+func solvePartTwo(machines []*Machine) int {
+	sum := 0
+	for _, m := range machines {
+		presses := findMinPressesPartTwo(m)
+		if presses == -1 {
+			lib.Fatalf("Impossible configuration found in Part 2")
+		}
+		sum += presses
+	}
+	return sum
+}
+
+func findMinPressesPartTwo(m *Machine) int {
+	rows := m.NumLights
+	cols := m.Buttons
+
+	// Build Augmented Matrix
+	mat := make([][]float64, rows)
+	for i := range mat {
+		mat[i] = make([]float64, cols+1)
+		mat[i][cols] = float64(m.TargetJoltage[i])
+	}
+
+	// Upper bounds for variables
+	maxVal := make([]int, cols)
+	for j := 0; j < cols; j++ {
+		minB := -1
+		hasConstraint := false
+		for _, l := range m.ButtonTriggers[j] {
+			if l < rows {
+				mat[l][j] = 1.0
+				if minB == -1 || m.TargetJoltage[l] < minB {
+					minB = m.TargetJoltage[l]
+				}
+				hasConstraint = true
+			}
+		}
+		if !hasConstraint {
+			maxVal[j] = 0 // Button affects nothing useful
+		} else {
+			maxVal[j] = minB
+		}
+	}
+
+	// Gaussian Elimination
+	pivotRow := 0
+	pivots := make([]int, rows) // pivots[row] = col
+	for i := range pivots {
+		pivots[i] = -1
+	}
+
+	colToPivotRow := make(map[int]int)
+
+	for j := 0; j < cols && pivotRow < rows; j++ {
+		// Find pivot
+		sel := -1
+		for i := pivotRow; i < rows; i++ {
+			if math.Abs(mat[i][j]) > 1e-9 {
+				sel = i
+				break
+			}
+		}
+		if sel == -1 {
+			continue
+		}
+
+		// Swap
+		mat[pivotRow], mat[sel] = mat[sel], mat[pivotRow]
+
+		// Normalize pivot row
+		pivotVal := mat[pivotRow][j]
+		for k := j; k <= cols; k++ {
+			mat[pivotRow][k] /= pivotVal
+		}
+
+		// Eliminate
+		for i := 0; i < rows; i++ {
+			if i != pivotRow {
+				factor := mat[i][j]
+				if math.Abs(factor) > 1e-9 {
+					for k := j; k <= cols; k++ {
+						mat[i][k] -= factor * mat[pivotRow][k]
+					}
+				}
+			}
+		}
+		pivots[pivotRow] = j
+		colToPivotRow[j] = pivotRow
+		pivotRow++
+	}
+
+	// Check consistency of remaining rows
+	for i := pivotRow; i < rows; i++ {
+		if math.Abs(mat[i][cols]) > 1e-9 {
+			return -1 // Impossible
+		}
+	}
+
+	// Identify free vars
+	var freeVars []int
+	for j := 0; j < cols; j++ {
+		if _, ok := colToPivotRow[j]; !ok {
+			freeVars = append(freeVars, j)
+		}
+	}
+
+	minPresses := -1
+
+	// Recursive search
+	var solve func(idx int, currentSum int, assignment []int)
+	solve = func(idx int, currentSum int, assignment []int) {
+		if minPresses != -1 && currentSum >= minPresses {
+			return
+		}
+
+		if idx == len(freeVars) {
+			// Calculate pivot vars
+			thisSum := currentSum
+			valid := true
+
+			for r := 0; r < pivotRow; r++ {
+				val := mat[r][cols]
+				for _, fv := range freeVars {
+					val -= mat[r][fv] * float64(assignment[fv])
+				}
+
+				// Check integer and non-negative
+				if val < -1e-9 {
+					valid = false
+					break
+				}
+
+				intVal := int(math.Round(val))
+				if math.Abs(val-float64(intVal)) > 1e-9 {
+					valid = false
+					break
+				}
+				thisSum += intVal
+			}
+
+			if valid {
+				if minPresses == -1 || thisSum < minPresses {
+					minPresses = thisSum
+				}
+			}
+			return
+		}
+
+		fv := freeVars[idx]
+		limit := maxVal[fv]
+		for v := 0; v <= limit; v++ {
+			assignment[fv] = v
+			solve(idx+1, currentSum+v, assignment)
+		}
+	}
+
+	assignment := make([]int, cols)
+	solve(0, 0, assignment)
 
 	return minPresses
 }
